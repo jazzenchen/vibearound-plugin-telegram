@@ -1,0 +1,21 @@
+node_modules/
+.DS_Store
+
+# telegram plugin build artifacts
+dist/
+release/
+
+*.log
+
+# .idea
+.idea/
+
+# Internal documentation directories
+/doc/
+/docs/
+
+/**/package-lock.json
+/**/.DS_Store
+
+.env
+.env.local
