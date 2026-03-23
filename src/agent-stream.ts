@@ -214,7 +214,7 @@ export class AgentStreamHandler {
     }
   }
 
-  onSendText(params: Record<string, unknown>): void {
+  onSendSystemText(params: Record<string, unknown>): void {
     const channelId = params.channelId as string;
     const text = params.text as string;
     const replyTo = params.replyTo as string | undefined;

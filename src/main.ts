@@ -119,8 +119,8 @@ transport.onNotification("agent_error", (params) => {
   streamHandler?.onAgentError(params);
 });
 
-transport.onNotification("send_text", (params) => {
-  streamHandler?.onSendText(params);
+transport.onNotification("send_system_text", (params) => {
+  streamHandler?.onSendSystemText(params);
 });
 
 // ---------------------------------------------------------------------------

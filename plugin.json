@@ -2,7 +2,7 @@
   "id": "telegram",
   "name": "Telegram Channel",
   "version": "0.1.0",
-  "type": "channel",
+  "kind": "channel",
   "runtime": "node",
   "entry": "dist/main.js",
   "build": "npm install && npm run build",
