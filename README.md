@@ -14,13 +14,15 @@ The plugin runs as a child process of the host. Messages are exchanged over stdi
 
 ## Features
 
-- Native streaming via `sendMessageDraft` (Bot API 9.5) — no flickering `editMessageText`
-- Powered by [grammY](https://grammy.dev/) + [@grammyjs/stream](https://github.com/grammyjs/stream)
-- Auto-retry on rate limits via [@grammyjs/auto-retry](https://grammy.dev/plugins/auto-retry)
+- **Block-based rendering**: each contiguous run of the same variant (thinking, tool use, text) becomes a separate message. Within each block, streaming is done via `sendMessage` + `editMessageText`. When the variant changes, the current block is sealed and a new message starts.
+- **sendChain message ordering**: all `flushBlock` calls are serialized via a promise chain to prevent out-of-order delivery
+- **Typing indicator interval**: a typing indicator is shown periodically during agent turns
+- Powered by [grammY](https://grammy.dev/) with [@grammyjs/auto-retry](https://grammy.dev/plugins/auto-retry)
 - Long polling mode (no public URL required)
 - Automatic message splitting for content > 4096 characters
 - Callback query (inline keyboard) support
 - Private and group chat support
+- `/help` slash command returns cached agent commands + system commands
 
 ## Project Structure
 
@@ -31,7 +33,7 @@ src/
 ├── stdout-guard.ts      # stdout interceptor (protects JSON-RPC channel)
 ├── protocol.ts          # Host ↔ Plugin protocol types
 ├── bot.ts               # grammY bot + long polling + message listener
-└── agent-stream.ts      # Agent events → sendMessageDraft streaming
+└── agent-stream.ts      # Agent events → block-based message rendering
 ```
 
 ## Development
@@ -69,6 +71,6 @@ Add to VibeAround's `settings.json`:
 
 JSON-RPC 2.0 over stdio, newline-delimited. See `src/protocol.ts` for details.
 
-## Streaming
+## Rendering
 
-Agent output is streamed to Telegram using the native `sendMessageDraft` API (Bot API 9.5, March 2026). This provides smooth animated text appearance without the rate-limit pressure and flickering of repeated `editMessageText` calls. The [@grammyjs/stream](https://github.com/grammyjs/stream) plugin handles batching, auto-splitting, and rate-limit retries automatically.
+Agent output uses block-based rendering. Each contiguous run of the same variant (thinking, tool use, text) is streamed within a single message via `sendMessage` followed by `editMessageText` updates. When the variant changes, the current block is sealed (no further edits) and a new message is created for the next block. All block flushes are serialized through `sendChain` to guarantee correct ordering.
