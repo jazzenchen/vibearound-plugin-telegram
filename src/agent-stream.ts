@@ -33,6 +33,8 @@ interface ChannelState {
   flushTimer: ReturnType<typeof setTimeout> | null;
   /** Timestamp of last edit (for throttling). */
   lastEditMs: number;
+  /** Serializes sendMessage calls to guarantee message order. */
+  sendChain: Promise<void>;
 }
 
 type LogFn = (level: string, msg: string) => void;
@@ -84,6 +86,7 @@ export class AgentStreamHandler {
       chatId,
       flushTimer: null,
       lastEditMs: 0,
+      sendChain: Promise.resolve(),
     });
   }
 
@@ -172,7 +175,7 @@ export class AgentStreamHandler {
     const last = state.blocks[state.blocks.length - 1];
     if (last && !last.sealed) {
       last.sealed = true;
-      this.flushBlock(state, last);
+      this.enqueueFlush(state, last);
     }
 
     this.channels.delete(sessionId);
@@ -209,7 +212,7 @@ export class AgentStreamHandler {
       // Seal current block
       if (current && !current.sealed) {
         current.sealed = true;
-        this.flushBlock(state, current);
+        this.enqueueFlush(state, current);
       }
       state.blocks.push({ kind, content: delta, messageId: null, sealed: false });
     }
@@ -242,7 +245,14 @@ export class AgentStreamHandler {
       return;
     }
 
-    this.flushBlock(state, block);
+    this.enqueueFlush(state, block);
+  }
+
+  /** Chain flushBlock onto the send queue to guarantee message order. */
+  private enqueueFlush(state: ChannelState, block: MessageBlock): void {
+    state.sendChain = state.sendChain
+      .then(() => this.flushBlock(state, block))
+      .catch((e) => this.log("error", `enqueueFlush error: ${e}`));
   }
 
   private async flushBlock(state: ChannelState, block: MessageBlock): Promise<void> {

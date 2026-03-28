@@ -11,6 +11,7 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
+    "@agentclientprotocol/sdk": "^0.17.1",
     "@grammyjs/auto-retry": "^2.0.2",
     "@grammyjs/stream": "^1.0.1",
     "grammy": "^1.35.0"
